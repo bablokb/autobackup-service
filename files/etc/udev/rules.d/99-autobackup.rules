@@ -1,0 +1,14 @@
+# ---------------------------------------------------------------------------
+# Run a script (using a systemd-service) after plugin of a external disk.
+#
+# Running the script directly fails, since udev only allows short-running scripts.
+#
+#
+# Author: Bernhard Bablok
+# License: GPL3
+#
+# Website: https://github.com/bablokb/autobackup-service
+#
+# ---------------------------------------------------------------------------
+
+KERNEL=="sd?", SUBSYSTEMS=="usb", ACTION=="add", RUN+="/bin/systemctl --no-block start autobackup@$kernel.service"

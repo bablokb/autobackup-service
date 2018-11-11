@@ -1,0 +1,148 @@
+#!/bin/bash
+# ---------------------------------------------------------------------------
+# This script is triggered by an udev-rule in
+# /etc/udev/rules.d/99-autobackup.rules. It starts the backup-script rsnapshot.
+#
+# Author: Bernhard Bablok
+# License: GPL3
+#
+# Website: https://github.com/bablokb/autobackup-service
+#
+# ---------------------------------------------------------------------------
+
+source /etc/autobackup.conf
+
+# --- write message to system log   -----------------------------------------
+
+msg() {
+  [ "$SYSLOG" = "1" ] && logger -s -t "$SCRIPT" "$1"
+}
+
+# --- global settings   -----------------------------------------------------
+
+setDefaults() {
+ SCRIPT=$(basename "$0")
+ : ${SYSLOG:=0}
+ : ${WAIT_FOR_DEVICE:=1}
+ : ${force_daily:=0}
+
+ msg "info: WAIT_FOR_DEVICE = $WAIT_FOR_DEVICE"
+ msg "info: force_daily     = $force_daily"
+ msg "info: yearly          = $yearly"
+ msg "info: monthly         = $monthly"
+ msg "info: weekly          = $weekly"
+ msg "info: daily           = $daily"
+}
+
+# --- check device   --------------------------------------------------------
+
+checkDevice() {
+  # query udev argument
+  udev_arg="$1"
+  msg "info: checking: $1"
+
+  # if label of backup-device (partition) is set explicitly, use it
+  if [ -n "$LABEL" ]; then
+    DEVICE=$(blkid -l -o device -t LABEL=$LABEL) 
+    if [ -z "$DEVICE" ]; then
+      msg "info: no partition with label $LABEL found"
+      exit 0
+    fi
+  elif [ -z "$DEVICE" ]; then
+    msg "error: neither LABEL nor DEVICE is set in /etc/autobackup.conf"
+    exit 3
+  fi
+
+  DEVICE="${DEVICE##*/}"  # strip leading /dev/
+  if [ "${DEVICE:0:3}" != "$udev_arg" ]; then
+    msg "info: new block-device $udev_arg does not match configured device"
+    exit 0
+  elif [ ! -b "/dev/$DEVICE" ]; then
+    msg "error: cannot find partition /dev/$DEVICE"
+    exit 3
+  fi
+}
+
+# --- prepare system   -----------------------------------------------------
+
+prepareSystem() {
+  # backup_part must have an entry in /etc/fstab
+  if [ -n "$LABEL" ]; then
+    if ! mount -L "$LABEL"; then
+      msg "error: could not mount backup-partition with label $LABEL"
+      exit 3
+    fi
+  else
+    if ! mount "$DEVICE"; then
+      msg "error: could not mount backup-partition $DEVICE"
+      exit 3
+    fi
+  fi
+  mount_dir=$(findmnt -n -l -o TARGET $DEVICE)
+}
+
+# --- cleanup   -------------------------------------------------------------
+
+cleanup() {
+  msg "info: umounting $DEVICE"
+  grep -qw "$DEVICE" /etc/mtab && umount "$DEVICE"
+}
+
+# --- run backup   ---------------------------------------------------------
+
+runBackup() {
+  local now_year now_month now_week now_day
+  local lb_year  lb_month  lb_week  lb_day
+
+  # query current date
+  read now_year now_month now_week now_day < <(date +"%Y %m %W %j")
+  msg "info: current year:  $now_year"
+  msg "info: current month: $now_month"
+  msg "info: current week:  $now_week"
+  msg "info: current day:   $now_day"
+
+  # check if we need a run for interval 'year'
+  if [ -n "$yearly" ]; then
+    lb_year=$(date -d "$(stat -c'@%Y' $mount_dir/$yearly.0)" +'%Y')
+    if [ $lb_year -lt $now_year ]; then
+      msg "info: starting backup for interval: $yearly (last backup: $lb_year)"
+      rsnapshot $yearly
+    fi
+  fi
+
+  # check if we need a run for interval 'month'
+  if [ -n "$monthly" ]; then
+    lb_month=$(date -d "$(stat -c'@%Y' $mount_dir/$monthly.0)" +'%m')
+    if [ $lb_month -lt $now_month ]; then
+      msg "info: starting backup for interval: $monthly (last backup: $lb_month)"
+      rsnapshot $monthly
+    fi
+  fi
+
+  # check if we need a run for interval 'week'
+  if [ -n "$weekly" ]; then
+    lb_week=$(date -d "$(stat -c'@%Y' $mount_dir/$weekly.0)" +'%W')
+    if [ $lb_weekly -lt $now_weekly ]; then
+      msg "info: starting backup for interval: $weekly (last backup: $lb_week)"
+      rsnapshot $weekly
+    fi
+  fi
+
+  # check if we need (another) run for interval 'day'
+  if [ -n "$daily" ]; then
+    lb_day=$(date -d "$(stat -c'@%Y' $mount_dir/$daily.0)" +'%j')
+    if [ $lb_daily -lt $now_daily -o $force_daily -eq 1 ]; then
+      msg "info: starting backup for interval: $daily (last backup: $lb_day)"
+      rsnapshot $daily
+    fi
+  fi
+}
+
+# --- main program   ---------------------------------------------------------
+
+setDefaults
+sleep "$WAIT_FOR_DEVICE"
+checkDevice "$1"
+prepareSystem
+runBackup
+cleanup

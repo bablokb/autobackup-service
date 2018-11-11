@@ -1,0 +1,20 @@
+# --------------------------------------------------------------------------
+# Systemd service Definition for autobackup@.service
+#
+# The service just starts the script /usr/local/sbin/autobackup. It is
+# triggered by the udev-rule 99-autobackup.rules
+#
+# Author: Bernhard Bablok
+# License: GPL3
+#
+# Website: https://github.com/bablokb/autobackup-service
+#
+# --------------------------------------------------------------------------
+
+[Unit]
+Description=Execute autobackup script
+BindsTo=dev-%i.device
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/autobackup %I

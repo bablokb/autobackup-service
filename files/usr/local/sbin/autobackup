@@ -26,12 +26,18 @@ setDefaults() {
  : ${WAIT_FOR_DEVICE:=1}
  : ${force_daily:=0}
 
+ msg "info: LABEL           = $LABEL"
  msg "info: WAIT_FOR_DEVICE = $WAIT_FOR_DEVICE"
  msg "info: force_daily     = $force_daily"
  msg "info: yearly          = $yearly"
  msg "info: monthly         = $monthly"
  msg "info: weekly          = $weekly"
  msg "info: daily           = $daily"
+
+ if [ -z "$LABEL" ]; then
+   msg "error: LABEL not set in configuration file /etc/autobackup.conf"
+   exit 3
+ fi
 }
 
 # --- check device   --------------------------------------------------------
@@ -41,44 +47,30 @@ checkDevice() {
   udev_arg="$1"
   msg "info: checking: $1"
 
-  # if label of backup-device (partition) is set explicitly, use it
-  if [ -n "$LABEL" ]; then
-    DEVICE=$(blkid -l -o device -t LABEL=$LABEL) 
-    if [ -z "$DEVICE" ]; then
-      msg "info: no partition with label $LABEL found"
-      exit 0
-    fi
-  elif [ -z "$DEVICE" ]; then
-    msg "error: neither LABEL nor DEVICE is set in /etc/autobackup.conf"
-    exit 3
+  # check for backup-partition ...
+  DEVICE=$(blkid -l -o device -t LABEL=$LABEL)
+  if [ -z "$DEVICE" ]; then
+    msg "info: no partition with label $LABEL found"
+    exit 0
   fi
 
-  DEVICE="${DEVICE##*/}"  # strip leading /dev/
-  if [ "${DEVICE:0:3}" != "$udev_arg" ]; then
-    msg "info: new block-device $udev_arg does not match configured device"
+  # ... and make sure it is on the newly plugged in block-device
+  if [ "${DEVICE:5:3}" != "$udev_arg" ]; then
+    msg "info: partition with label $LABEL is not on newly plugged device $udev_arg"
     exit 0
-  elif [ ! -b "/dev/$DEVICE" ]; then
-    msg "error: cannot find partition /dev/$DEVICE"
-    exit 3
   fi
 }
 
 # --- prepare system   -----------------------------------------------------
 
 prepareSystem() {
-  # backup_part must have an entry in /etc/fstab
-  if [ -n "$LABEL" ]; then
-    if ! mount -L "$LABEL"; then
-      msg "error: could not mount backup-partition with label $LABEL"
-      exit 3
-    fi
-  else
-    if ! mount "$DEVICE"; then
-      msg "error: could not mount backup-partition $DEVICE"
-      exit 3
-    fi
+  # we mount the backup partion by label (must have an entry in /etc/fstab)
+  if ! mount -L "$LABEL"; then
+    msg "error: could not mount backup-partition with label $LABEL"
+    exit 3
   fi
   mount_dir=$(findmnt -n -l -o TARGET $DEVICE)
+  msg "info: mount-directory: $mount_dir"
 }
 
 # --- cleanup   -------------------------------------------------------------

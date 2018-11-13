@@ -95,37 +95,61 @@ runBackup() {
 
   # check if we need a run for interval 'year'
   if [ -n "$yearly" ]; then
-    lb_year=$(date -d "$(stat -c'@%Y' $mount_dir/$yearly.0)" +'%Y')
+    if [ ! -d "$mount_dir/$yearly.0" ]; then
+      lb_year=0
+    else
+      lb_year=$(date -d "$(stat -c'@%Y' $mount_dir/$yearly.0 2>/dev/null)" +'%Y')
+    fi
     if [ $lb_year -lt $now_year ]; then
       msg "info: starting backup for interval: $yearly (last backup: $lb_year)"
       rsnapshot $yearly
+    else
+      msg "info: yearly backup already done"
     fi
   fi
 
   # check if we need a run for interval 'month'
   if [ -n "$monthly" ]; then
-    lb_month=$(date -d "$(stat -c'@%Y' $mount_dir/$monthly.0)" +'%m')
+    if [ ! -d "$mount_dir/$monthly.0" ]; then
+      lb_month=0
+    else
+      lb_month=$(date -d "$(stat -c'@%Y' $mount_dir/$monthly.0 2>/dev/null)" +'%m')
+    fi
     if [ $lb_month -lt $now_month ]; then
       msg "info: starting backup for interval: $monthly (last backup: $lb_month)"
       rsnapshot $monthly
+    else
+      msg "info: monthly backup already done"
     fi
   fi
 
   # check if we need a run for interval 'week'
   if [ -n "$weekly" ]; then
-    lb_week=$(date -d "$(stat -c'@%Y' $mount_dir/$weekly.0)" +'%W')
-    if [ $lb_weekly -lt $now_weekly ]; then
+    if [ ! -d "$mount_dir/$weekly.0" ]; then
+      lb_week=0
+    else
+      lb_week=$(date -d "$(stat -c'@%Y' $mount_dir/$weekly.0 2>/dev/null)" +'%W')
+    fi
+    if [ $lb_week -lt $now_week ]; then
       msg "info: starting backup for interval: $weekly (last backup: $lb_week)"
       rsnapshot $weekly
+    else
+      msg "info: weekly backup already done"
     fi
   fi
 
   # check if we need (another) run for interval 'day'
   if [ -n "$daily" ]; then
-    lb_day=$(date -d "$(stat -c'@%Y' $mount_dir/$daily.0)" +'%j')
-    if [ $lb_daily -lt $now_daily -o $force_daily -eq 1 ]; then
+    if [ ! -d "$mount_dir/$daily.0" ]; then
+      lb_day=0
+    else
+      lb_day=$(date -d "$(stat -c'@%Y' $mount_dir/$daily.0 2>/dev/null)" +'%j')
+    fi
+    if [ $lb_day -lt $now_day -o $force_daily -eq 1 ]; then
       msg "info: starting backup for interval: $daily (last backup: $lb_day)"
       rsnapshot $daily
+    else
+      msg "info: daily backup already done"
     fi
   fi
 }

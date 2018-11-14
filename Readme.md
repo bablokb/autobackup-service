@@ -68,8 +68,11 @@ Here you have to set a number of variables:
   - `daily`, `weekly`, `monthly`, `yearly`: the names of your backup-levels.
     Rsnapshot's example uses `alpha`, `beta`, `gamma`, but I prefer my own names.
   - `force_daily`: set this variable to `1` if you want multiple backups
-    per day. **Note that this setting will prevent normal access to the
-    partition, since every plugin will trigger a mount-backup-umount cycle.**
+    per day.
+    **Note that this setting will trigger a *mount-backup-umount* cycle
+    for every plugin of the device. To access the partition normally,
+    just let the backup finish normally. Afterwards mount the partition manually
+    instead of detaching the device.**
 
 It should be obvious that the values in `/etc/autobackup.conf` must match
 your configuration in `/etc/rsnapshot.conf` and `/etc/fstab`.

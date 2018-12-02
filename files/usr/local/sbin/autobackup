@@ -71,6 +71,7 @@ prepareSystem() {
   fi
   mount_dir=$(findmnt -n -l -o TARGET $DEVICE)
   msg "info: mount-directory: $mount_dir"
+  mkdir -p "$mount_dir/.autobackup"
 }
 
 # --- cleanup   -------------------------------------------------------------
@@ -95,14 +96,16 @@ runBackup() {
 
   # check if we need a run for interval 'year'
   if [ -n "$yearly" ]; then
-    if [ ! -d "$mount_dir/$yearly.0" ]; then
+    if [ ! -f "$mount_dir/.autobackup/.$yearly.last" ]; then
       lb_year=0
     else
-      lb_year=$(date -d "$(stat -c'@%Y' $mount_dir/$yearly.0 2>/dev/null)" +'%Y')
+      lb_year=$(date -d "$(stat -c'@%Y' \
+                      $mount_dir/.autobackup/.$yearly.last 2>/dev/null)" +'%Y')
     fi
     if [ $lb_year -ne $now_year ]; then
       msg "info: starting backup for interval: $yearly (last backup: $lb_year)"
-      rsnapshot $yearly
+      rsnapshot $yearly | grep -vq "not present (yet)" && \
+                                   touch "$mount_dir/.autobackup/.$yearly.last"
     else
       msg "info: yearly backup already done"
     fi
@@ -110,14 +113,16 @@ runBackup() {
 
   # check if we need a run for interval 'month'
   if [ -n "$monthly" ]; then
-    if [ ! -d "$mount_dir/$monthly.0" ]; then
+    if [ ! -f "$mount_dir/.autobackup/.$monthly.last" ]; then
       lb_month=0
     else
-      lb_month=$(date -d "$(stat -c'@%Y' $mount_dir/$monthly.0 2>/dev/null)" +'%m')
+      lb_month=$(date -d "$(stat -c'@%Y' \
+                       $mount_dir/.autobackup/.$monthly.last 2>/dev/null)" +'%m')
     fi
     if [ $lb_month -ne $now_month ]; then
       msg "info: starting backup for interval: $monthly (last backup: $lb_month)"
-      rsnapshot $monthly
+      rsnapshot $monthly | grep -vq "not present (yet)" && \
+                                   touch "$mount_dir/.autobackup/.$monthly.last"
     else
       msg "info: monthly backup already done"
     fi
@@ -125,14 +130,16 @@ runBackup() {
 
   # check if we need a run for interval 'week'
   if [ -n "$weekly" ]; then
-    if [ ! -d "$mount_dir/$weekly.0" ]; then
+    if [ ! -f "$mount_dir/.autobackup/.$weekly.last" ]; then
       lb_week=0
     else
-      lb_week=$(date -d "$(stat -c'@%Y' $mount_dir/$weekly.0 2>/dev/null)" +'%W')
+      lb_week=$(date -d "$(stat -c'@%Y' \
+                      $mount_dir/.autobackup/.$weekly.last 2>/dev/null)" +'%W')
     fi
     if [ $lb_week -ne $now_week ]; then
       msg "info: starting backup for interval: $weekly (last backup: $lb_week)"
-      rsnapshot $weekly
+      rsnapshot $weekly | grep -vq "not present (yet)" && \
+                                   touch "$mount_dir/.autobackup/.$weekly.last"
     else
       msg "info: weekly backup already done"
     fi
@@ -140,14 +147,16 @@ runBackup() {
 
   # check if we need (another) run for interval 'day'
   if [ -n "$daily" ]; then
-    if [ ! -d "$mount_dir/$daily.0" ]; then
+    if [ ! -f "$mount_dir/.autobackup/.$daily.last" ]; then
       lb_day=0
     else
-      lb_day=$(date -d "$(stat -c'@%Y' $mount_dir/$daily.0 2>/dev/null)" +'%j')
+      lb_day=$(date -d "$(stat -c'@%Y' \
+                     $mount_dir/.autobackup/.$daily.last 2>/dev/null)" +'%j')
     fi
     if [ $lb_day -ne $now_day -o $force_daily -eq 1 ]; then
       msg "info: starting backup for interval: $daily (last backup: $lb_day)"
       rsnapshot $daily
+      touch "$mount_dir/.autobackup/.$daily.last"
     else
       msg "info: daily backup already done"
     fi

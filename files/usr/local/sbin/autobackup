@@ -104,8 +104,8 @@ runBackup() {
     fi
     if [ $lb_year -ne $now_year ]; then
       msg "info: starting backup for interval: $yearly (last backup: $lb_year)"
-      rsnapshot $yearly | grep -vq "not present (yet)" && \
-                                   touch "$mount_dir/.autobackup/.$yearly.last"
+      rsnapshot $yearly
+      touch "$mount_dir/.autobackup/.$yearly.last"
     else
       msg "info: yearly backup already done"
     fi
@@ -121,8 +121,8 @@ runBackup() {
     fi
     if [ $lb_month -ne $now_month ]; then
       msg "info: starting backup for interval: $monthly (last backup: $lb_month)"
-      rsnapshot $monthly | grep -vq "not present (yet)" && \
-                                   touch "$mount_dir/.autobackup/.$monthly.last"
+      rsnapshot $monthly
+      touch "$mount_dir/.autobackup/.$monthly.last"
     else
       msg "info: monthly backup already done"
     fi
@@ -138,8 +138,8 @@ runBackup() {
     fi
     if [ $lb_week -ne $now_week ]; then
       msg "info: starting backup for interval: $weekly (last backup: $lb_week)"
-      rsnapshot $weekly | grep -vq "not present (yet)" && \
-                                   touch "$mount_dir/.autobackup/.$weekly.last"
+      rsnapshot $weekly
+      touch "$mount_dir/.autobackup/.$weekly.last"
     else
       msg "info: weekly backup already done"
     fi

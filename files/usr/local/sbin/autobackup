@@ -64,8 +64,9 @@ checkDevice() {
 # --- prepare system   -----------------------------------------------------
 
 prepareSystem() {
-  # we mount the backup partion by label (must have an entry in /etc/fstab)
-  if ! mount -L "$LABEL"; then
+  # we mount the backup partion by label
+  mkdir -p /tmp/autobackup
+  if ! mount -L "$LABEL" /tmp/autobackup; then
     msg "error: could not mount backup-partition with label $LABEL"
     exit 3
   fi

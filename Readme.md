@@ -26,20 +26,6 @@ a label. You can add the label with the command
 
     sudo e2label /dev/sdc1 "Backup"
 
-Also, to mount the backup-device you need an entry within the `/etc/fstab`
-which should look like
-
-    LABEL=Backup /backup auto noauto,user,user_xattr,noatime,acl 0 0
-
-Create and use a suitable mount point, the directory `/backup` in the line
-above is only an example.
-
-You should test that this entry works by executing
-
-    mount -L Backup
-
-This should mount your backup-partition.
-
 
 Installation
 ------------
@@ -74,8 +60,14 @@ Here you have to set a number of variables:
     just let the backup finish normally. Afterwards mount the partition manually
     instead of detaching the device.**
 
+You can find an example for `/etc/rsnapshot.conf` in the file
+`/etc/rsnapshot.conf.autobackup-service`. You should copy this file
+and edit it to your needs. Idealy, you would only change the "retain"-statements
+in the middle of the file and the directories you want to backup at
+the end of the file.
+
 It should be obvious that the values in `/etc/autobackup.conf` must match
-your configuration in `/etc/rsnapshot.conf` and `/etc/fstab`.
+your configuration in `/etc/rsnapshot.conf`.
 
 
 How it works

@@ -84,4 +84,4 @@ configure_system
 enable_services
 
 echo "[INFO] installation completed"
-echo "[INFO] Please edit /etc/autobackup.conf, /etc/rsnapshot.conf, /etc/fstab"
+echo "[INFO] Please edit /etc/autobackup.conf, /etc/rsnapshot.conf"

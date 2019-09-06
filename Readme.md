@@ -70,6 +70,16 @@ It should be obvious that the values in `/etc/autobackup.conf` must match
 your configuration in `/etc/rsnapshot.conf`.
 
 
+Disabling automount
+-------------------
+
+If your Linux-system automounts removable media, you should disable
+automounting. E.g. for Raspbian, you can use the default filemanager for this
+taks. If you run Gnome, you can run the script `tools/gnome-disable-automount`
+(kindly provided by Dan Cohoon, see
+[this issue](https://github.com/bablokb/autobackup-service/issues/2).
+
+
 How it works
 ------------
 

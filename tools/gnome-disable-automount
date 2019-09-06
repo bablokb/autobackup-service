@@ -1,0 +1,18 @@
+#!/bin/bash
+# ---------------------------------------------------------------------------
+# Helper-script to disable automount if you are running gnome.
+#
+# Note if you run the respective commands with 'get' instead of 'set'
+# (and without argument), the gsettings command will return the current state.
+#
+# Author: Don Cohoon
+# License: GPL3
+#
+# Website: https://github.com/bablokb/autobackup-service
+#
+# ---------------------------------------------------------------------------
+
+echo "[INFO] setting automount to 'false'"
+gsettings set org.gnome.desktop.media-handling automount false
+echo "[INFO] setting automount-open to 'false'"
+gsettings set org.gnome.desktop.media-handling automount-open false

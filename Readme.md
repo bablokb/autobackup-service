@@ -76,7 +76,7 @@ Disabling automount
 If your Linux-system automounts removable media, you should disable
 automounting. E.g. for Raspbian, you can use the default filemanager for this
 task. If you run Gnome, you can run the script `tools/gnome-disable-automount`
-(kindly provided by Dan Cohoon, see
+(kindly provided by Don Cohoon, see
 [this issue](https://github.com/bablokb/autobackup-service/issues/2)).
 
 

@@ -78,8 +78,11 @@ prepareSystem() {
 # --- cleanup   -------------------------------------------------------------
 
 cleanup() {
+  msg "info: syncing (this may take a while)"
+  sync
   msg "info: umounting $DEVICE"
   grep -qw "$DEVICE" /etc/mtab && umount "$DEVICE"
+  msg "info: finished"
 }
 
 # --- run backup   ---------------------------------------------------------
